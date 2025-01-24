@@ -72,6 +72,10 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        #timer {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
         @media (max-width: 768px) {
             #container {
                 flex-direction: column;
@@ -164,6 +168,7 @@
             <button class="button is-success is-rounded" onclick="resumeMusic()">Reanudar</button>
             <div id="selectedVideoTitle"></div>
             <iframe id="videoPlayer" src="" allowfullscreen controls="false"></iframe>
+            <div id="timer">Tiempo: 0:00</div> <!-- Aquí se mostrará el tiempo -->
         </div>
     </div>
 
@@ -199,6 +204,7 @@
                 player.onload = () => {
                     player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
                     isPaused = false;
+                    startTimer();
                 };
             } else {
                 console.log('No se ha seleccionado ningún video.');
@@ -212,6 +218,7 @@
                 player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                 isPaused = true;
                 player.contentWindow.postMessage('{"event":"command","func":"getCurrentTime","args":""}', '*');
+                clearInterval(timerInterval);
             }
         }
 
@@ -220,15 +227,15 @@
             currentTime = time;
         }
 
-        // Manejar el formulario de nombre
-        function setName() {
-            userName = document.getElementById('nameInput').value.trim();
-            if (userName) {
-                document.getElementById('nameForm').style.display = 'none';
-                document.getElementById('chatContainer').style.display = 'block';
-            } else {
-                alert('Por favor ingresa un nombre.');
-            }
+        // Iniciar el temporizador
+        let timerInterval;
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                currentTime += 1;
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = currentTime % 60;
+                document.getElementById('timer').textContent = `Tiempo: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }, 1000);
         }
 
         // Función de reproducción de música
@@ -241,6 +248,7 @@
                 player.src = embedUrl;
                 setTimeout(() => {
                     player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                    startTimer();
                 }, 1000);
             } else {
                 console.log('No se ha seleccionado ningún video.');
