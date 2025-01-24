@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -27,6 +27,38 @@
             overflow: hidden;
             margin-right: 20px;
         }
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            position: relative;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        td iframe {
+            width: 120px;
+            height: 90px;
+            border: none;
+            object-fit: cover;
+        }
+        .table-container thead th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            background-color: #f4f4f4;
+            z-index: 1;
+        }
         #videoPlayerContainer {
             width: 100%;
             max-width: 800px;
@@ -39,10 +71,6 @@
         #selectedVideoTitle {
             margin-top: 20px;
             font-weight: bold;
-        }
-        #timer {
-            font-size: 1.2rem;
-            margin-top: 10px;
         }
         @media (max-width: 768px) {
             #container {
@@ -57,6 +85,46 @@
                 width: 100%;
             }
         }
+        th {
+            color: black;
+        }
+        #chatContainer {
+            margin-top: 20px;
+        }
+        #messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #333;
+        }
+        #chatForm {
+            display: flex;
+            align-items: center;
+        }
+        #chatMessage {
+            flex: 1;
+            margin-right: 10px;
+        }
+        #nameForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #nameInput {
+            margin-bottom: 10px;
+        }
+        .chat {
+            overflow-y: auto;
+            height: 100px;
+          
+        }
+        .message {
+            margin-bottom: 5px;
+            
+        }
     </style>
 </head>
 <body>
@@ -67,28 +135,91 @@
         </div>
     </section>
 
+    <div class="field has-addons" style="margin-left: 35px;">
+        <div class="control">
+            <input class="input" type="text" id="searchQuery" placeholder="Buscar...">
+        </div>
+        <div class="control">
+            <button class="button is-info" onclick="searchMusic()">Buscar</button>
+        </div>
+    </div>
+
     <div id="container">
+        <div id="searchResultsWrapper">
+            <div class="table-container" style="border-radius: 10px; color: black;">
+                <table id="searchResults" class="table">
+                    <thead>
+                        <tr>
+                            <th style="color: black;">Miniatura</th>
+                            <th style="color: black;">Título</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div id="videoPlayerContainer">
             <p class="subtitle">Reproductor</p>
             <button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
             <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
-            <button class="button is-primary is-rounded" onclick="resumeMusic()">Reanudar</button>
             <div id="selectedVideoTitle"></div>
-            <iframe id="videoPlayer" src="" allowfullscreen></iframe>
-            <div id="timer">00:00</div>
+            <iframe id="videoPlayer" src="" allowfullscreen cotrols="fasle"></iframe>
+
+            <br>
+
+            <!-- Timer -->
+            <div id="timer" style="color: white; font-size: 20px;">
+                Tiempo: <span id="timerDisplay">0</span> segundos
+            </div>
+            <br>
+            <button class="button is-info" onclick="startTimer()">Iniciar Temporizador</button>
+            <button class="button is-danger" onclick="stopTimer()">Detener Temporizador</button>
         </div>
     </div>
 
+    <div id="chatContainer" style="display: none; border-radius: 10px; ">
+        <div id="messages" style="border-radius: 10px; margin: 5px; background-color: black;" class="chat">
+            <!-- Los mensajes del chat se mostrarán aquí -->
+        </div>
+        <form id="chatForm">
+            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..." style="width: 80%; margin: 10px;">
+            <button type="submit" class="button is-primary" style="margin: 10px;">Enviar</button>
+        </form>
+    </div>
+
+    <br>
+
+    <div id="nameForm">
+        <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
+        <button class="button is-info" onclick="setName()">Aceptar</button>
+    </div>
+
+    <br>
     <script>
         const socket = io();
         let selectedVideoUrl = '';
         let selectedVideoTitle = '';
         let userName = '';
         let userColors = {}; // Objeto para almacenar colores por usuario
-        let videoPlayer = document.getElementById('videoPlayer');
         let timerInterval;
-        let currentTime = 0;
+        let timerSeconds = 0;
 
+        // Función para iniciar el temporizador
+        function startTimer() {
+            if (timerInterval) return; // Si ya hay un temporizador corriendo, no hacer nada
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                document.getElementById('timerDisplay').textContent = timerSeconds;
+            }, 1000);
+        }
+
+        // Función para detener el temporizador
+        function stopTimer() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        
         // Generar color aleatorio
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
@@ -98,22 +229,24 @@
             }
             return color;
         }
-
+    
         // Manejar mensajes de chat
         socket.on('chatMessage', (data) => {
             const messagesContainer = document.getElementById('messages');
             const messageElement = document.createElement('div');
+            
+            // Obtener color para el usuario
             let userColor = userColors[data.userName];
             if (!userColor) {
                 userColor = getRandomColor();
                 userColors[data.userName] = userColor;
             }
-
+    
             messageElement.innerHTML = `<span style="color: ${userColor}; font-weight: bold;">${data.userName}:</span> ${data.message}`;
             messagesContainer.appendChild(messageElement);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Desplazar hacia abajo
         });
-
+    
         // Manejar envío de mensajes de chat
         document.getElementById('chatForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -124,7 +257,7 @@
                 messageInput.value = '';
             }
         });
-
+    
         // Mostrar el formulario de chat y ocultar el de nombre
         function setName() {
             userName = document.getElementById('nameInput').value.trim();
@@ -135,91 +268,61 @@
                 alert('Por favor ingresa un nombre.');
             }
         }
-
+    
         // Manejar resultados de búsqueda de música
         socket.on('searchResults', (data) => {
             const tableBody = document.querySelector('#searchResults tbody');
             tableBody.innerHTML = '';
             data.forEach(video => {
                 const row = document.createElement('tr');
+    
+                // Crear el elemento de miniatura con iframe
                 const thumbnailCell = document.createElement('td');
                 const iframe = document.createElement('iframe');
                 const videoId = new URL(video.url).searchParams.get('v');
                 iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
+    
                 iframe.title = video.title;
                 iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
                 iframe.allowfullscreen = true;
                 thumbnailCell.appendChild(iframe);
-
+    
+                // Crear el texto del título
                 const titleCell = document.createElement('td');
                 const title = document.createElement('span');
                 title.textContent = video.title;
                 titleCell.appendChild(title);
-
+    
+                // Añadir la fila a la tabla
                 row.appendChild(thumbnailCell);
                 row.appendChild(titleCell);
-
-                row.onclick = () => {
+                tableBody.appendChild(row);
+    
+                // Asignar clic a la fila para reproducir el video
+                row.addEventListener('click', () => {
                     selectedVideoUrl = video.url;
                     selectedVideoTitle = video.title;
-                    const titleElement = document.getElementById('selectedVideoTitle');
-                    titleElement.textContent = `Canción seleccionada: ${selectedVideoTitle}`;
-                    const videoId = new URL(video.url).searchParams.get('v');
-                    const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
-                    videoPlayer.src = embedUrl;
-                };
-
-                tableBody.appendChild(row);
+                    document.getElementById('videoPlayer').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                    document.getElementById('selectedVideoTitle').textContent = `Reproduciendo: ${video.title}`;
+                    document.getElementById('chatContainer').style.display = 'none'; // Ocultar chat
+                });
             });
         });
 
-        // Manejar reproducción de video
+        // Función para buscar música
+        function searchMusic() {
+            const searchQuery = document.getElementById('searchQuery').value;
+            socket.emit('searchMusic', searchQuery);
+        }
+
+        // Funciones de reproducción de música
         function playMusic() {
-            if (selectedVideoUrl) {
-                const videoId = new URL(selectedVideoUrl).searchParams.get('v');
-                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`;
-                videoPlayer.src = embedUrl;
-                setTimeout(() => {
-                    videoPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                    startTimer();
-                }, 1000);
-            } else {
-                console.log('No se ha seleccionado ningún video.');
-            }
+            // Aquí va la lógica para reproducir música
         }
 
-        // Función para pausar el video
         function pauseMusic() {
-            videoPlayer.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-            stopTimer();
-        }
-
-        // Función para reanudar el video
-        function resumeMusic() {
-            videoPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-            startTimer();
-        }
-
-        // Función para iniciar el temporizador
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                currentTime++;
-                updateTimer();
-            }, 1000);
-        }
-
-        // Función para detener el temporizador
-        function stopTimer() {
-            clearInterval(timerInterval);
-        }
-
-        // Función para actualizar el temporizador
-        function updateTimer() {
-            const minutes = Math.floor(currentTime / 60);
-            const seconds = currentTime % 60;
-            document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Aquí va la lógica para pausar música
         }
     </script>
-
 </body>
 </html>
