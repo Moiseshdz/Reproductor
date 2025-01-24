@@ -116,6 +116,13 @@
             flex-direction: column;
             align-items: center;
             margin-top: 20px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
         }
         #nameInput {
             margin-bottom: 10px;
@@ -294,9 +301,18 @@
 
         // Buscar música
         function searchMusic() {
-            const query = document.getElementById('searchQuery').value.trim();
-            if (query) {
-                socket.emit('search', query);
+            const query = document.getElementById('searchQuery').value;
+            socket.emit('search', query);
+        }
+
+        // Función para establecer el nombre
+        function setName() {
+            userName = document.getElementById('nameInput').value;
+            if (userName) {
+                document.getElementById('nameForm').style.display = 'none'; // Cerrar popup
+                document.getElementById('chatContainer').style.display = 'block'; // Mostrar chat
+            } else {
+                alert('Por favor, ingresa un nombre.');
             }
         }
     </script>
