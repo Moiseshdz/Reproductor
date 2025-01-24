@@ -54,6 +54,7 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(4000, () => {
-    console.log('Servidor escuchando en el puerto 4000');
+const port = process.env.PORT || 4000; // Usa el puerto de la variable de entorno
+server.listen(port, () => {
+    console.log(`Servidor escuchando en el puerto ${port}`);
 });
