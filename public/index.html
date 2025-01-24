@@ -165,21 +165,11 @@
             <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
             <div id="selectedVideoTitle"></div>
             <iframe id="videoPlayer" src="" allowfullscreen cotrols="fasle"></iframe>
-
-            <br>
-
-            <!-- Timer -->
-            <div id="timer" style="color: white; font-size: 20px;">
-                Tiempo: <span id="timerDisplay">0</span> segundos
-            </div>
-            <br>
-            <button class="button is-info" onclick="startTimer()">Iniciar Temporizador</button>
-            <button class="button is-danger" onclick="stopTimer()">Detener Temporizador</button>
         </div>
     </div>
 
     <div id="chatContainer" style="display: none; border-radius: 10px; ">
-        <div id="messages" style="border-radius: 10px; margin: 5px; background-color: black;" class="chat">
+        <div id="messages" style="border-radius: 10px; margin: 5px;   background-color: black;" class="chat">
             <!-- Los mensajes del chat se mostrarán aquí -->
         </div>
         <form id="chatForm">
@@ -202,24 +192,7 @@
         let selectedVideoTitle = '';
         let userName = '';
         let userColors = {}; // Objeto para almacenar colores por usuario
-        let timerInterval;
-        let timerSeconds = 0;
-
-        // Función para iniciar el temporizador
-        function startTimer() {
-            if (timerInterval) return; // Si ya hay un temporizador corriendo, no hacer nada
-            timerInterval = setInterval(() => {
-                timerSeconds++;
-                document.getElementById('timerDisplay').textContent = timerSeconds;
-            }, 1000);
-        }
-
-        // Función para detener el temporizador
-        function stopTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        
+    
         // Generar color aleatorio
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
@@ -293,36 +266,84 @@
                 title.textContent = video.title;
                 titleCell.appendChild(title);
     
-                // Añadir la fila a la tabla
                 row.appendChild(thumbnailCell);
                 row.appendChild(titleCell);
-                tableBody.appendChild(row);
     
-                // Asignar clic a la fila para reproducir el video
-                row.addEventListener('click', () => {
+                row.onclick = () => {
                     selectedVideoUrl = video.url;
                     selectedVideoTitle = video.title;
-                    document.getElementById('videoPlayer').src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-                    document.getElementById('selectedVideoTitle').textContent = `Reproduciendo: ${video.title}`;
-                    document.getElementById('chatContainer').style.display = 'none'; // Ocultar chat
-                });
+                    const titleElement = document.getElementById('selectedVideoTitle');
+                    titleElement.textContent = `Canción seleccionada: ${selectedVideoTitle}`;
+                    const videoId = new URL(video.url).searchParams.get('v');
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
+                    const player = document.getElementById('videoPlayer');
+                    player.src = embedUrl;
+                };
+    
+                tableBody.appendChild(row);
             });
         });
+    
+        // Manejar reproducción de video
+        socket.on('play', (videoUrl) => {
+            const videoId = new URL(videoUrl).searchParams.get('v');
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`; 
+            const player = document.getElementById('videoPlayer');
+            player.src = embedUrl;
+    
+            player.onload = () => {
+                player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+            };
+        });
+    
+        // Manejar pausa de video
+        socket.on('pause', () => {
+            const player = document.getElementById('videoPlayer');
+            if (player) {
+                player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+            }
+        });
 
-        // Función para buscar música
+        
+    
+        // Manejar búsqueda de tiempo
+        socket.on('seek', (time) => {
+            console.log('Buscando:', time);
+            // Aquí podrías enviar un mensaje para buscar el tiempo en el video si fuera necesario
+        });
+    
+        // Función de búsqueda de música
         function searchMusic() {
-            const searchQuery = document.getElementById('searchQuery').value;
-            socket.emit('searchMusic', searchQuery);
+            const query = document.getElementById('searchQuery').value;
+            socket.emit('search', query);
         }
-
-        // Funciones de reproducción de música
+    
+        // Función de reproducción de música
         function playMusic() {
-            // Aquí va la lógica para reproducir música
+            if (selectedVideoUrl) {
+                socket.emit('play', selectedVideoUrl);
+                const videoId = new URL(selectedVideoUrl).searchParams.get('v');
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`;
+                const player = document.getElementById('videoPlayer');
+                player.src = embedUrl;
+                setTimeout(() => {
+                    player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                }, 1000);
+            } else {
+                console.log('No se ha seleccionado ningún video.');
+            }
         }
-
+    
+        // Función de pausa de música
         function pauseMusic() {
-            // Aquí va la lógica para pausar música
+            socket.emit('pause');
+        }
+    
+        // Función de búsqueda de tiempo
+        function seekMusic(time) {
+            socket.emit('seek', time);
         }
     </script>
+    
 </body>
 </html>
