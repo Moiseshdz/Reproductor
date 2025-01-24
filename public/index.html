@@ -287,7 +287,7 @@
         // Manejar reproducción de video
         socket.on('play', (videoUrl) => {
             const videoId = new URL(videoUrl).searchParams.get('v');
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1`; 
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`; 
             const player = document.getElementById('videoPlayer');
             player.src = embedUrl;
     
@@ -321,7 +321,7 @@
             if (selectedVideoUrl) {
                 socket.emit('play', selectedVideoUrl);
                 const videoId = new URL(selectedVideoUrl).searchParams.get('v');
-                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1`;
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`;
                 const player = document.getElementById('videoPlayer');
                 player.src = embedUrl;
                 setTimeout(() => {
