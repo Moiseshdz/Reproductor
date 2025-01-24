@@ -14,116 +14,30 @@
             background-color: black;
             color: white;
         }
-        #container {
-            display: flex;
-            flex-direction: row;
-            padding: 20px;
-            flex-wrap: wrap;
+        /* Estilos adicionales para el temporizador y el popup */
+        #timer {
+            color: white;
+            font-size: 20px;
+            margin-top: 10px;
         }
-        #searchResultsWrapper {
-            width: 100%;
-            max-width: 600px;
-            max-height: 250px;
-            overflow: hidden;
-            margin-right: 20px;
+        #replayButton {
+            margin-top: 10px;
         }
-        .table-container {
-            max-height: 500px;
-            overflow-y: auto;
-            display: block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            position: relative;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        td iframe {
-            width: 120px;
-            height: 90px;
-            border: none;
-            object-fit: cover;
-        }
-        .table-container thead th {
-            position: -webkit-sticky;
-            position: sticky;
+        #popup {
+            display: none;
+            position: fixed;
             top: 0;
-            background-color: #f4f4f4;
-            z-index: 1;
-        }
-        #videoPlayerContainer {
-            width: 100%;
-            max-width: 800px;
-        }
-        #videoPlayer {
-            width: 100%;
-            height: 500px;
-            border: none;
-        }
-        #selectedVideoTitle {
-            margin-top: 20px;
-            font-weight: bold;
-        }
-        @media (max-width: 768px) {
-            #container {
-                flex-direction: column;
-                align-items: center;
-            }
-            #searchResultsWrapper {
-                margin-right: 0;
-                margin-bottom: 20px;
-            }
-            #videoPlayerContainer {
-                width: 100%;
-            }
-        }
-        th {
-            color: black;
-        }
-        #chatContainer {
-            margin-top: 20px;
-        }
-        #messages {
-            max-height: 300px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #333;
-        }
-        #chatForm {
-            display: flex;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
             align-items: center;
         }
-        #chatMessage {
-            flex: 1;
-            margin-right: 10px;
-        }
-        #nameForm {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 20px;
-        }
-        #nameInput {
-            margin-bottom: 10px;
-        }
-        .chat {
-            overflow-y: auto;
-            height: 100px;
-          
-        }
-        .message {
-            margin-bottom: 5px;
-            
+        #popupContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -164,13 +78,14 @@
             <button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
             <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
             <div id="selectedVideoTitle"></div>
-            <iframe id="videoPlayer" src="" allowfullscreen cotrols="fasle"></iframe>
-            <div id="timer">Tiempo: 0:00</div> <!-- Aquí se mostrará el tiempo -->
+            <iframe id="videoPlayer" src="" allowfullscreen controls="false"></iframe>
+            <p id="timer">00:00</p>
+            <button id="replayButton" class="button is-primary" style="display:none;" onclick="replayVideo()">Reanudar</button>
         </div>
     </div>
 
     <div id="chatContainer" style="display: none; border-radius: 10px; ">
-        <div id="messages" style="border-radius: 10px; margin: 5px;   background-color: black;" class="chat">
+        <div id="messages" style="border-radius: 10px; margin: 5px; background-color: black;" class="chat">
             <!-- Los mensajes del chat se mostrarán aquí -->
         </div>
         <form id="chatForm">
@@ -179,22 +94,23 @@
         </form>
     </div>
 
-    <br>
-
-    <div id="nameForm">
-        <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
-        <button class="button is-info" onclick="setName()">Aceptar</button>
+    <!-- Formulario de nombre de usuario -->
+    <div id="popup">
+        <div id="popupContent">
+            <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
+            <button class="button is-info" onclick="setName()">Aceptar</button>
+        </div>
     </div>
 
-    <br>
     <script>
         const socket = io();
         let selectedVideoUrl = '';
         let selectedVideoTitle = '';
         let userName = '';
-        let userColors = {}; // Objeto para almacenar colores por usuario
-    
-        // Generar color aleatorio
+        let userColors = {};
+        let videoTimer;
+        let videoTime = 0; // Variable para el tiempo del video
+
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
             let color = '#';
@@ -203,25 +119,21 @@
             }
             return color;
         }
-    
-        // Manejar mensajes de chat
+
         socket.on('chatMessage', (data) => {
             const messagesContainer = document.getElementById('messages');
             const messageElement = document.createElement('div');
-            
-            // Obtener color para el usuario
             let userColor = userColors[data.userName];
             if (!userColor) {
                 userColor = getRandomColor();
                 userColors[data.userName] = userColor;
             }
-    
+
             messageElement.innerHTML = `<span style="color: ${userColor}; font-weight: bold;">${data.userName}:</span> ${data.message}`;
             messagesContainer.appendChild(messageElement);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Desplazar hacia abajo
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
-    
-        // Manejar envío de mensajes de chat
+
         document.getElementById('chatForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const messageInput = document.getElementById('chatMessage');
@@ -231,45 +143,39 @@
                 messageInput.value = '';
             }
         });
-    
-        // Mostrar el formulario de chat y ocultar el de nombre
+
         function setName() {
             userName = document.getElementById('nameInput').value.trim();
             if (userName) {
-                document.getElementById('nameForm').style.display = 'none';
+                document.getElementById('popup').style.display = 'none';
                 document.getElementById('chatContainer').style.display = 'block';
             } else {
                 alert('Por favor ingresa un nombre.');
             }
         }
-    
-        // Manejar resultados de búsqueda de música
+
         socket.on('searchResults', (data) => {
             const tableBody = document.querySelector('#searchResults tbody');
             tableBody.innerHTML = '';
             data.forEach(video => {
                 const row = document.createElement('tr');
-    
-                // Crear el elemento de miniatura con iframe
                 const thumbnailCell = document.createElement('td');
                 const iframe = document.createElement('iframe');
                 const videoId = new URL(video.url).searchParams.get('v');
                 iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
-    
                 iframe.title = video.title;
                 iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
                 iframe.allowfullscreen = true;
                 thumbnailCell.appendChild(iframe);
-    
-                // Crear el texto del título
+
                 const titleCell = document.createElement('td');
                 const title = document.createElement('span');
                 title.textContent = video.title;
                 titleCell.appendChild(title);
-    
+
                 row.appendChild(thumbnailCell);
                 row.appendChild(titleCell);
-    
+
                 row.onclick = () => {
                     selectedVideoUrl = video.url;
                     selectedVideoTitle = video.title;
@@ -279,87 +185,80 @@
                     const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
                     const player = document.getElementById('videoPlayer');
                     player.src = embedUrl;
+                    videoTime = 0;
+                    updateTimer();
                 };
-    
+
                 tableBody.appendChild(row);
             });
         });
-    
-        // Manejar reproducción de video
+
         socket.on('play', (videoUrl) => {
             const videoId = new URL(videoUrl).searchParams.get('v');
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`; 
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`;
             const player = document.getElementById('videoPlayer');
             player.src = embedUrl;
-    
             player.onload = () => {
                 player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                startTimer();
             };
         });
-    
-        // Manejar pausa de video
+
         socket.on('pause', () => {
             const player = document.getElementById('videoPlayer');
             if (player) {
                 player.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                clearInterval(videoTimer); // Detener el temporizador cuando se pause
+                document.getElementById('replayButton').style.display = 'inline-block'; // Mostrar el botón de reanudar
             }
         });
 
-        // Obtener el tiempo actual del video
-        function setCurrentTime(time) {
-            currentTime = time;
-        }
-
-        // Iniciar el temporizador
-        let timerInterval;
         function startTimer() {
-            timerInterval = setInterval(() => {
-                currentTime += 1;
-                const minutes = Math.floor(currentTime / 60);
-                const seconds = currentTime % 60;
-                document.getElementById('timer').textContent = `Tiempo: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            videoTimer = setInterval(() => {
+                videoTime++;
+                updateTimer();
             }, 1000);
         }
 
-    
-        // Manejar búsqueda de tiempo
-        socket.on('seek', (time) => {
-            console.log('Buscando:', time);
-            // Aquí podrías enviar un mensaje para buscar el tiempo en el video si fuera necesario
-        });
-    
-        // Función de búsqueda de música
-        function searchMusic() {
-            const query = document.getElementById('searchQuery').value;
-            socket.emit('search', query);
+        function updateTimer() {
+            const minutes = Math.floor(videoTime / 60);
+            const seconds = videoTime % 60;
+            document.getElementById('timer').textContent = `${padZero(minutes)}:${padZero(seconds)}`;
         }
-    
-        // Función de reproducción de música
+
+        function padZero(number) {
+            return number < 10 ? '0' + number : number;
+        }
+
+        function replayVideo() {
+            socket.emit('play', selectedVideoUrl);
+            clearInterval(videoTimer);
+            videoTime = 0;
+            startTimer();
+            document.getElementById('replayButton').style.display = 'none';
+        }
+
         function playMusic() {
             if (selectedVideoUrl) {
                 socket.emit('play', selectedVideoUrl);
                 const videoId = new URL(selectedVideoUrl).searchParams.get('v');
-                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1`;
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1`;
                 const player = document.getElementById('videoPlayer');
                 player.src = embedUrl;
-                setTimeout(() => {
-                    player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-                }, 1000);
-            } else {
-                console.log('No se ha seleccionado ningún video.');
+                startTimer();
             }
         }
-    
-        // Función de pausa de música
+
         function pauseMusic() {
             socket.emit('pause');
         }
-    
-        // Función de búsqueda de tiempo
-        function seekMusic(time) {
-            socket.emit('seek', time);
+
+        function searchMusic() {
+            const query = document.getElementById('searchQuery').value.trim();
+            if (query) {
+                socket.emit('search', query);
+            }
         }
     </script>
-    
 </body>
 </html>
