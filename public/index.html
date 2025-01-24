@@ -176,14 +176,11 @@
         </form>
     </div>
 
-    <br>
-
-    <div id="nameForm">
+    <div id="nameForm" style="display: flex; justify-content: center; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 10px;">
         <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
         <button class="button is-info" onclick="setName()">Aceptar</button>
     </div>
 
-    <br>
     <script>
         const socket = io();
         let selectedVideoUrl = '';
@@ -191,10 +188,10 @@
         let userName = '';
         let currentTime = 0;
         let isPaused = false;
-    
+
         // Función para manejar la reanudación del video
         function resumeMusic() {
-            if (selectedVideoUrl) {
+            if (selectedVideoUrl && currentTime > 0) {
                 const player = document.getElementById('videoPlayer');
                 const videoId = new URL(selectedVideoUrl).searchParams.get('v');
                 const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1&autoplay=1&mute=1&start=${currentTime}`;
