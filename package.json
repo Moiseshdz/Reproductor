@@ -4,5 +4,8 @@
     "express": "^4.19.2",
     "socket.io": "^4.7.5",
     "ytdl-core": "^4.11.5"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
