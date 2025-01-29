@@ -14,6 +14,27 @@ if (roomName) {
     socket.emit('joinRoom', roomName);
 }
 
+// Función para obtener una cookie por su nombre
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null; // Retornar null si la cookie no existe
+}
+
+// Obtener el nickname de la cookie
+const nickname = getCookie('nickname');
+
+// Ocultar el formulario de nombre y mostrar el chat si el nickname existe
+if (nickname) {
+    userName = nickname; // Asignar el nickname a la variable userName
+    document.getElementById('nameForm').style.display = 'none'; // Ocultar el formulario de nombre
+    document.getElementById('chatContainer').style.display = 'block'; // Mostrar el chat
+} else {
+    // Si no hay nickname en la cookie, mostrar el formulario de nombre
+    document.getElementById('nameForm').style.display = 'block';
+}
+
 // Generar color aleatorio
 function getRandomColor() {
     const letters = '0123456789ABCDEF';
@@ -52,7 +73,7 @@ document.getElementById('chatForm').addEventListener('submit', (e) => {
     }
 });
 
-// Mostrar el formulario de chat y ocultar el de nombre
+// Mostrar el formulario de chat y ocultar el de nombre (opcional)
 function setName() {
     userName = document.getElementById('nameInput').value.trim();
     if (userName) {
@@ -156,7 +177,6 @@ function pauseMusic() {
 function seekMusic(time) {
     socket.emit('seek', { roomName, time });
 }
-
 
 // función para mostrar notificaciones
 function showNotification(message, type = 'is-white') {
