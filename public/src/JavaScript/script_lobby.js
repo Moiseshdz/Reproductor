@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let roomName = document.getElementById("roomNameInput").value.trim();
         if (roomName) {
             // Redirigir a la sala con el nombre y el ID generado
-            window.location.href = `../../index.html?room=${encodeURIComponent(roomName)}-${idSala}&userType=${userType}`;
+            window.location.href = `../../lobby.html?room=${encodeURIComponent(roomName)}-${idSala}&userType=${userType}`;
         } else {
             showNotification("Por favor, escribe un nombre para la sala.", "danger");
         }
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let roomId = document.getElementById("roomIdInput").value.trim();
         if (roomId) {
             // Redirigir a la sala con el ID proporcionado
-            window.location.href = `../../index.html?room=${encodeURIComponent(roomId)}&userType=Invitado`;
+            window.location.href = `../../lobby.html?room=${encodeURIComponent(roomId)}&userType=Invitado`;
         } else {
             showNotification("Por favor, escribe un ID de sala válido.", "danger");
         }

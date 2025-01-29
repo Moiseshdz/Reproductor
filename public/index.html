@@ -3,152 +3,81 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Midy Live</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
-    <link rel="stylesheet" href="src/css/style_index.css">
+    <link rel="stylesheet" href="src/css/style_lobby.css">
+    <title>Lobby</title>
 </head>
 
 <body>
-    <!-- Aquí es donde se incluirá el encabezado -->
-    <section class="hero is-info">
-        <div class="hero-body">
-            <a href="lobby.html"><p class="is-link" style="font-size: 25px; color:aliceblue ">Salir</p></a>
-            <p class="title" id="room-title">Sala: </p>
-            <p class="subtitle" id="cookie-info"></p>
-            <p class="subtitle" id="room-title-id">Id: </p>
-        </div>
-    </section>
-    <br>
 
-    <div class="field has-addons" style="margin-left: 35px;">
-        <div class="control">
-            <input class="input" type="text" id="searchQuery" placeholder="Buscar...">
-        </div>
-        <div class="control">
-            <button class="button is-info" onclick="searchMusic()">Buscar</button>
+    <!-- Modal para ingresar el nickname -->
+    <div class="modal" id="nicknameModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Ingresa tu Nickname</p>
+            </header>
+            <section class="modal-card-body">
+                <div class="field">
+                    <label class="label">Nickname</label>
+                    <div class="control">
+                        <input class="input" type="text" id="nicknameInput" placeholder="Escribe tu nick">
+                    </div>
+                </div>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success" id="saveNickname">Guardar</button>
+            </footer>
         </div>
     </div>
 
-    <div id="container">
-        <div id="searchResultsWrapper">
-            <div class="table-container" style="border-radius: 10px; color: black;">
-                <table id="searchResults" class="table">
-                    <thead>
-                        <tr>
-                            <th style="color: black;">Miniatura</th>
-                            <th style="color: black;">Título</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-5-tablet is-4-desktop is-3-widescreen">
+                    <div class="box">
+                        <h1 class="title has-text-centered">Bienvenido a MiDy, <span id="userNickname"></span>!</h1>
+
+                        <div class="field">
+                            <label class="label">Nombre de la Sala</label>
+                            <div class="control">
+                                <input class="input" type="text" id="roomNameInput"
+                                    placeholder="Escribe el nombre de la sala">
+                            </div>
+                        </div>
+                        <p class="control has-text-centered">
+                            <button class="button is-link is-large" id="createRoomBtn">
+                                Crear Sala
+                            </button>
+                        </p>
+
+                        <hr>
+
+                        <div class="field">
+                            <label class="label">ID de la Sala</label>
+                            <div class="control">
+                                <input class="input" type="text" id="roomIdInput"
+                                    placeholder="Escribe el ID de la sala">
+                            </div>
+                        </div>
+                        <p class="control has-text-centered">
+                            <button class="button is-link is-large" id="joinRoomBtn">
+                                Unirse a Sala
+                            </button>
+                        </p>
+
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="videoPlayerContainer">
-            <p class="subtitle">Reproductor</p>
-            <button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
-            <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
-            <div id="selectedVideoTitle"></div>
-            <iframe id="videoPlayer" src="" allowfullscreen controls="false"></iframe>
-        </div>
-    </div>
+    </section>
 
-    <div id="chatContainer" style="display: none; border-radius: 10px; ">
-        <div id="messages" style="border-radius: 10px; margin: 5px; background-color: black;" class="chat">
-            <!-- Los mensajes del chat se mostrarán aquí -->
-        </div>
-        <form id="chatForm">
-            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..." style="width: 80%; margin: 10px;">
-            <button type="submit" class="button is-primary" style="margin: 10px;">Enviar</button>
-        </form>
-    </div>
+    <!-- Contenedor de notificaciones flotantes -->
+    <div id="notificationContainer" class="notification-container"></div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="src/JavaScript/script_lobby.js"></script>
 
-    <br>
-
-    <div id="nameForm">
-        <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
-        <button class="button is-info" onclick="setName()">Aceptar</button>
-    </div>
-
-    <br>
-    <script src="src/JavaScript/script_index.js"></script>
-
-    <script>
-        // Función para obtener una cookie por su nombre
-        function getCookie(name) {
-            var value = "; " + document.cookie;
-            var parts = value.split("; " + name + "=");
-            if (parts.length == 2) return parts.pop().split(";").shift();
-            return null; // Retornar null si la cookie no existe
-        }
-
-        // Obtener el nickname de la cookie
-        var nickname = getCookie("nickname");
-
-        window.onload = function () {
-            var urlParams = new URLSearchParams(window.location.search);
-            var userType = urlParams.get('userType');
-            var room = urlParams.get('room');
-            var roomid = urlParams.get('room');
-
-            if (room) {
-                room = room.replace(/[\d-]+/g, '').trim(); // Elimina números y guiones
-            }
-
-            var roomTitleElement = document.getElementById("room-title");
-            var cookieInfoElement = document.getElementById("cookie-info");
-            var roomTitleElementid = document.getElementById("room-title-id");
-
-            if (roomTitleElement) {
-                roomTitleElement.innerText = "Sala: " + (room ? room : "Sin nombre");
-            }
-
-            roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") + "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
-
-            // Definir la función para copiar
-            document.getElementById('copyButton').addEventListener('click', function () {
-                var textToCopy = roomid ? roomid : "Sin nombre";
-
-                // Crea un elemento temporal de texto
-                var textarea = document.createElement('textarea');
-                textarea.value = textToCopy;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                alert("Room ID copiado al portapapeles: " + textToCopy);
-            });
-
-            var Rol = userType ? userType : "Invitado";
-
-            if (cookieInfoElement) {
-                if (Rol === "Admin") {
-                    cookieInfoElement.innerText = "Admin: " + (nickname ? nickname : "No definido");
-                } else {
-                    cookieInfoElement.innerText = "Invitado: " + (nickname ? nickname : "No definido");
-                }
-            }
-        };
-
-
-
-
-    </script>
-
-<style>
-    .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        padding: 1rem;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-</style>
 </body>
 
 </html>
