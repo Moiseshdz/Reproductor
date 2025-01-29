@@ -120,8 +120,10 @@
 
                     // Crear la notificación flotante
                     var notification = document.createElement('div');
+                    notification.style.textAlign = 'center';
                     notification.style.position = 'fixed';
                     notification.style.bottom = '20px';
+                    notification.style.width = '70%';
                     notification.style.left = '50%';
                     notification.style.transform = 'translateX(-50%)';
                     notification.style.backgroundColor = 'rgba(0, 128, 0, 0.8)';
@@ -130,7 +132,7 @@
                     notification.style.borderRadius = '5px';
                     notification.style.fontSize = '16px';
                     notification.style.zIndex = '1000';
-                    notification.innerHTML = "Room ID copiado al portapapeles: " + textToCopy;
+                    notification.innerHTML = "ID copiado: " + textToCopy;
 
                     // Añadir la notificación al body
                     document.body.appendChild(notification);
