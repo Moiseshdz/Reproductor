@@ -75,7 +75,7 @@
     <br>
     <script src="src/JavaScript/script_index.js"></script>
 
-    <script>
+   <script>
         // Función para obtener una cookie por su nombre
         function getCookie(name) {
             var value = "; " + document.cookie;
@@ -87,6 +87,7 @@
         // Obtener el nickname de la cookie
         var nickname = getCookie("nickname");
 
+        // Función que se ejecuta cuando el DOM está completamente cargado
         window.onload = function () {
             var urlParams = new URLSearchParams(window.location.search);
             var userType = urlParams.get('userType');
@@ -97,44 +98,50 @@
                 room = room.replace(/[\d-]+/g, '').trim(); // Elimina números y guiones
             }
 
+            // Obtener los elementos del DOM
             var roomTitleElement = document.getElementById("room-title");
-            var nickname = document.getElementById("cookie-info");
+            var cookieInfoElement = document.getElementById("cookie-info");
             var roomTitleElementid = document.getElementById("room-title-id");
 
+            // Verificar si los elementos existen y luego manipular su contenido
             if (roomTitleElement) {
                 roomTitleElement.innerText = "Sala: " + (room ? room : "Sin nombre");
             }
 
-            roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") + "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
+            if (roomTitleElementid) {
+                roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") + 
+                "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
+                
+                // Definir la función para copiar el room ID
+                document.getElementById('copyButton').addEventListener('click', function () {
+                    var textToCopy = roomid ? roomid : "Sin nombre";
 
-            // Definir la función para copiar
-            document.getElementById('copyButton').addEventListener('click', function () {
-                var textToCopy = roomid ? roomid : "Sin nombre";
+                    // Crea un elemento temporal de texto
+                    var textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
 
-                // Crea un elemento temporal de texto
-                var textarea = document.createElement('textarea');
-                textarea.value = textToCopy;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
+                    alert("Room ID copiado al portapapeles: " + textToCopy);
+                });
+            }
 
-                alert("Room ID copiado al portapapeles: " + textToCopy);
-            });
-
+            // Definir el rol de usuario si no existe
             var Rol = userType ? userType : "Invitado";
 
+            // Asegúrate de que el elemento 'cookie-info' exista antes de intentar modificarlo
             if (cookieInfoElement) {
                 if (Rol === "Admin") {
                     cookieInfoElement.innerText = "Admin: " + (nickname ? nickname : "No definido");
                 } else {
                     cookieInfoElement.innerText = "Invitado: " + (nickname ? nickname : "No definido");
                 }
+            } else {
+                console.log("Elemento 'cookie-info' no encontrado.");
             }
         };
-
-
-
 
     </script>
 
