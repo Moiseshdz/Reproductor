@@ -75,7 +75,7 @@
     <br>
     <script src="src/JavaScript/script_index.js"></script>
 
-   <script>
+ <script>
         // Función para obtener una cookie por su nombre
         function getCookie(name) {
             var value = "; " + document.cookie;
@@ -128,7 +128,7 @@
                 });
             }
 
-            // Definir el rol de usuario si no existe
+            // Establecer el rol de usuario por defecto a "Invitado"
             var Rol = userType ? userType : "Invitado";
 
             // Asegúrate de que el elemento 'cookie-info' exista antes de intentar modificarlo
@@ -136,13 +136,13 @@
                 if (Rol === "Admin") {
                     cookieInfoElement.innerText = "Admin: " + (nickname ? nickname : "No definido");
                 } else {
+                    // Si no es Admin, debe ser Invitado
                     cookieInfoElement.innerText = "Invitado: " + (nickname ? nickname : "No definido");
                 }
             } else {
                 console.log("Elemento 'cookie-info' no encontrado.");
             }
         };
-
     </script>
 
 <style>
