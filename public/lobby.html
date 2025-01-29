@@ -14,7 +14,9 @@
     <!-- Aquí es donde se incluirá el encabezado -->
     <section class="hero is-info">
         <div class="hero-body">
-            <a href="index.html"><p class="is-link" style="font-size: 25px; color:aliceblue ">Salir</p></a>
+            <a href="index.html">
+                <p class="is-link" style="font-size: 25px; color:aliceblue ">Salir</p>
+            </a>
             <p class="title" id="room-title">Sala: </p>
             <p class="subtitle" id="cookie-info"></p>
             <p class="subtitle" id="room-title-id">Id: </p>
@@ -60,7 +62,8 @@
             <!-- Los mensajes del chat se mostrarán aquí -->
         </div>
         <form id="chatForm">
-            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..." style="width: 80%; margin: 10px;">
+            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..."
+                style="width: 80%; margin: 10px;">
             <button type="submit" class="button is-primary" style="margin: 10px;">Enviar</button>
         </form>
     </div>
@@ -68,7 +71,7 @@
     <br>
 
     <div id="nameForm">
-        <input type="text" id="nameInput"  class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
+        <input type="text" id="nameInput" class="input" placeholder="Ingresa tu nombre..." style="width: 90%;">
         <button class="button is-info" onclick="setName()">Aceptar</button>
     </div>
 
@@ -76,7 +79,7 @@
     <script src="src/JavaScript/script_index.js"></script>
 
     <script>
-    
+
 
         // Función que se ejecuta cuando el DOM está completamente cargado
         window.onload = function () {
@@ -100,9 +103,9 @@
             }
 
             if (roomTitleElementid) {
-                roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") + 
-                "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
-                
+                roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") +
+                    "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
+
                 // Definir la función para copiar el room ID
                 document.getElementById('copyButton').addEventListener('click', function () {
                     var textToCopy = roomid ? roomid : "Sin nombre";
@@ -115,9 +118,34 @@
                     document.execCommand('copy');
                     document.body.removeChild(textarea);
 
-                    alert("Room ID copiado al portapapeles: " + textToCopy);
+                    // Crear la notificación flotante
+                    var notification = document.createElement('div');
+                    notification.style.position = 'fixed';
+                    notification.style.bottom = '20px';
+                    notification.style.left = '50%';
+                    notification.style.transform = 'translateX(-50%)';
+                    notification.style.backgroundColor = 'rgba(0, 128, 0, 0.8)';
+                    notification.style.color = 'white';
+                    notification.style.padding = '10px 20px';
+                    notification.style.borderRadius = '5px';
+                    notification.style.fontSize = '16px';
+                    notification.style.zIndex = '1000';
+                    notification.innerHTML = "Room ID copiado al portapapeles: " + textToCopy;
+
+                    // Añadir la notificación al body
+                    document.body.appendChild(notification);
+
+                    // Eliminar la notificación después de 3 segundos
+                    setTimeout(function () {
+                        notification.style.transition = 'opacity 0.5s';
+                        notification.style.opacity = '0';
+                        setTimeout(function () {
+                            document.body.removeChild(notification);
+                        }, 500);
+                    }, 3000);
                 });
             }
+
 
             // Definir el rol de usuario si no existe
             var Rol = userType ? userType : "Invitado";
@@ -136,17 +164,17 @@
 
     </script>
 
-<style>
-    .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        padding: 1rem;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-</style>
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </body>
 
 </html>
