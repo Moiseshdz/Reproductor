@@ -4,19 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reproductor de Música</title>
+    <title>Midy Live</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
-    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/css/style_index.css">
 </head>
 
 <body>
-    <section class="hero">
+    <!-- Aquí es donde se incluirá el encabezado -->
+    <section class="hero is-info">
         <div class="hero-body">
-            <p class="title">Midy</p>
-            <p class="subtitle">Live</p>
+            <a href="lobby.html"><p class="is-link" style="font-size: 25px; color:aliceblue ">Salir</p></a>
+            <p class="title" id="room-title">Sala: </p>
+            <p class="subtitle" id="cookie-info"></p>
+            <p class="subtitle" id="room-title-id">Id: </p>
         </div>
     </section>
+    <br>
 
     <div class="field has-addons" style="margin-left: 35px;">
         <div class="control">
@@ -47,17 +51,16 @@
             <button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
             <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
             <div id="selectedVideoTitle"></div>
-            <iframe id="videoPlayer" src="" allowfullscreen cotrols="fasle"></iframe>
+            <iframe id="videoPlayer" src="" allowfullscreen controls="false"></iframe>
         </div>
     </div>
 
     <div id="chatContainer" style="display: none; border-radius: 10px; ">
-        <div id="messages" style="border-radius: 10px; margin: 5px;   background-color: black;" class="chat">
+        <div id="messages" style="border-radius: 10px; margin: 5px; background-color: black;" class="chat">
             <!-- Los mensajes del chat se mostrarán aquí -->
         </div>
         <form id="chatForm">
-            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..."
-                style="width: 80%; margin: 10px;">
+            <input type="text" id="chatMessage" class="input" placeholder="Escribe un mensaje..." style="width: 80%; margin: 10px;">
             <button type="submit" class="button is-primary" style="margin: 10px;">Enviar</button>
         </form>
     </div>
@@ -70,8 +73,82 @@
     </div>
 
     <br>
-    <script src="src/script.js"></script>
+    <script src="src/JavaScript/script_index.js"></script>
 
+    <script>
+        // Función para obtener una cookie por su nombre
+        function getCookie(name) {
+            var value = "; " + document.cookie;
+            var parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+            return null; // Retornar null si la cookie no existe
+        }
+
+        // Obtener el nickname de la cookie
+        var nickname = getCookie("nickname");
+
+        window.onload = function () {
+            var urlParams = new URLSearchParams(window.location.search);
+            var userType = urlParams.get('userType');
+            var room = urlParams.get('room');
+            var roomid = urlParams.get('room');
+
+            if (room) {
+                room = room.replace(/[\d-]+/g, '').trim(); // Elimina números y guiones
+            }
+
+            var roomTitleElement = document.getElementById("room-title");
+            var cookieInfoElement = document.getElementById("cookie-info");
+            var roomTitleElementid = document.getElementById("room-title-id");
+
+            if (roomTitleElement) {
+                roomTitleElement.innerText = "Sala: " + (room ? room : "Sin nombre");
+            }
+
+            roomTitleElementid.innerHTML = "Id: " + (roomid ? roomid : "Sin nombre") + "<button id='copyButton' class='button subtitle is-small is-ghost' style='color:white; font-size:15px;'>Copiar</button>";
+
+            // Definir la función para copiar
+            document.getElementById('copyButton').addEventListener('click', function () {
+                var textToCopy = roomid ? roomid : "Sin nombre";
+
+                // Crea un elemento temporal de texto
+                var textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                alert("Room ID copiado al portapapeles: " + textToCopy);
+            });
+
+            var Rol = userType ? userType : "Invitado";
+
+            if (cookieInfoElement) {
+                if (Rol === "Admin") {
+                    cookieInfoElement.innerText = "Admin: " + (nickname ? nickname : "No definido");
+                } else {
+                    cookieInfoElement.innerText = "Invitado: " + (nickname ? nickname : "No definido");
+                }
+            }
+        };
+
+
+
+
+    </script>
+
+<style>
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 1rem;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+</style>
 </body>
 
 </html>

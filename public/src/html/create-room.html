@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+    <title>Sala</title>
+</head>
+
+<body>
+    <!-- Encabezado -->
+    <section class="hero is-primary">
+        <div class="hero-body">
+            <p class="title" id="room-title">Sala: </p>
+            <p class="subtitle" id="cookie-info"></p>
+        </div>
+    </section>
+    
+    <br>
+
+ 
+
+    <script>
+        // Función para obtener una cookie por su nombre
+        function getCookie(name) {
+            var value = "; " + document.cookie;
+            var parts = value.split("; " + name + "=");
+            if (parts.length == 2) return parts.pop().split(";").shift();
+            return null; // Retornar null si la cookie no existe
+        }
+
+        // Obtener el nickname de la cookie
+        var nickname = getCookie("nickname");
+
+        // Obtener el parámetro "room" de la URL
+        var urlParams = new URLSearchParams(window.location.search);
+        var roomName = urlParams.get('room');
+
+        // Remover los números del nombre de la sala
+        if (roomName) {
+            roomName = roomName.replace(/\d+/g, ''); // Elimina todos los dígitos del nombre
+        }
+
+        // Mostrar la información en los elementos HTML
+        document.getElementById("room-title").innerText = "Sala: " + (roomName ? roomName.trim() : "Sin nombre");
+
+
+        // Mostrar la información en los elementos HTML con estilos de Bulma
+        document.getElementById("room-title").innerText = "Sala: " + (roomName ? roomName : "Sin nombre");
+        document.getElementById("cookie-info").innerText = "Admin: " + (nickname ? nickname : "No definido");
+    </script>
+
+
+
+
+</body>
+
+</html>

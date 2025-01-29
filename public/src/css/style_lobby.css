@@ -1,0 +1,22 @@
+      /* Estilo para que las notificaciones sean flotantes */
+      .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        width: 300px;
+    }
+    .notification {
+        margin-bottom: 10px;
+        animation: slideIn 0.5s ease-out, fadeOut 20s forwards;
+    }
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
