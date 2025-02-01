@@ -98,7 +98,7 @@ socket.on('searchResults', (data) => {
         const iframe = document.createElement('iframe');
         const videoId = new URL(video.url).searchParams.get('v');
         iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=1`;
-        iframe.loading = "lazy"; // Optimizar la carga del iframe
+
         iframe.title = video.title;
         iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
         iframe.allowfullscreen = true;
@@ -113,26 +113,19 @@ socket.on('searchResults', (data) => {
         row.appendChild(thumbnailCell);
         row.appendChild(titleCell);
 
-        // Al hacer clic en un video, se lanza automáticamente
         row.onclick = () => {
             selectedVideoUrl = video.url;
             selectedVideoTitle = video.title;
             const titleElement = document.getElementById('selectedVideoTitle');
             titleElement.textContent = `Canción seleccionada: ${selectedVideoTitle}`;
+            const videoId = new URL(video.url).searchParams.get('v');
 
-            // Emitir el evento de cambio de video al servidor
-            socket.emit('changeVideo', { roomName, videoUrl: selectedVideoUrl });
+            // Enviar el video seleccionado al socket para que se reproduzca en ambos dispositivos
+            socket.emit('play', { roomName, videoUrl: selectedVideoUrl });
         };
 
         tableBody.appendChild(row);
     });
-});
-
-// Manejar cambio de video desde el servidor
-socket.on('changeVideo', (videoUrl) => {
-    const videoId = new URL(videoUrl).searchParams.get('v');
-    player.loadVideoById(videoId); // Cargar el video en el reproductor
-    player.playVideo(); // Reproducir el video automáticamente
 });
 
 // Cargar la API de YouTube IFrame
@@ -143,38 +136,9 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var player;
 var interval;
-
-// Función de throttle para limitar la frecuencia de los eventos
-function throttle(func, limit) {
-    let lastFunc;
-    let lastRan;
-    return function() {
-        const context = this;
-        const args = arguments;
-        if (!lastRan) {
-            func.apply(context, args);
-            lastRan = Date.now();
-        } else {
-            clearTimeout(lastFunc);
-            lastFunc = setTimeout(function() {
-                if ((Date.now() - lastRan) >= limit) {
-                    func.apply(context, args);
-                    lastRan = Date.now();
-                }
-            }, limit - (Date.now() - lastRan));
-        }
-    };
-}
-
-// Ejemplo de uso con la función de sincronización
-const throttledSync = throttle(function(currentTime) {
-    socket.emit('play', { roomName, currentTime });
-}, 5000); // Sincroniza cada 5 segundos
-
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('videoPlayer', {
         height: '360',
-        muted: true,
         width: '640',
         events: {
             'onReady': onPlayerReady,
@@ -186,16 +150,12 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     console.log("El reproductor está listo");
 
-    // Escuchar eventos de interacción del usuario
+    // Iniciar el contador cuando el video comienza a reproducirse
     player.addEventListener('onStateChange', function(event) {
         if (event.data == YT.PlayerState.PLAYING) {
             startTimer();
-            throttledSync(player.getCurrentTime()); // Usar throttle para sincronizar
-        } else if (event.data == YT.PlayerState.PAUSED) {
-            clearInterval(interval);
-            socket.emit('pause', { roomName, currentTime: player.getCurrentTime() });
-        } else if (event.data == YT.PlayerState.ENDED) {
-            clearInterval(interval);
+        } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
+            clearInterval(interval); // Detener el contador si el video se pausa o termina
         }
     });
 }
@@ -205,8 +165,8 @@ function startTimer() {
 
     // Actualizar el contador cada segundo
     interval = setInterval(function() {
-        var currentTime = player.getCurrentTime();
-        timeElement.textContent = "" + formatTime(currentTime);
+        var currentTime = player.getCurrentTime(); // Obtener el tiempo actual del video
+        timeElement.textContent = "Tiempo transcurrido: " + formatTime(currentTime);
     }, 1000);
 }
 
@@ -217,30 +177,35 @@ function formatTime(seconds) {
 }
 
 function onPlayerStateChange(event) {
-    // Actualizar el tiempo cuando el video se pausa, adelanta o retrocede
-    if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.PLAYING) {
-        var currentTime = player.getCurrentTime();
-        document.getElementById('time').textContent = "Transcurrido: " + formatTime(currentTime);
+    // Sincronizar pausa y reproducción
+    if (event.data == YT.PlayerState.PAUSED) {
+        socket.emit('pause', roomName);
+    } else if (event.data == YT.PlayerState.PLAYING) {
+        socket.emit('play', { roomName, videoUrl: selectedVideoUrl });
+    }
+
+    // Sincronizar cambios de tiempo (adelantar o retroceder)
+    if (event.data == YT.PlayerState.PLAYING || event.data == YT.PlayerState.PAUSED) {
+        const currentTime = player.getCurrentTime();
+        socket.emit('seek', { roomName, time: currentTime });
     }
 }
 
-// Manejar cambio de video
-socket.on('changeVideo', (data) => {
-    const videoId = new URL(data.videoUrl).searchParams.get('v');
+// Manejar reproducción de video desde el socket
+socket.on('play', (videoUrl) => {
+    const videoId = new URL(videoUrl).searchParams.get('v');
     player.loadVideoById(videoId); // Cargar el video en el reproductor
     player.playVideo(); // Reproducir el video
 });
 
-// Manejar reproducción de video
-socket.on('play', (data) => {
-    player.seekTo(data.currentTime, true); // Sincronizar el tiempo
-    player.playVideo(); // Reproducir el video
+// Manejar pausa de video desde el socket
+socket.on('pause', () => {
+    player.pauseVideo(); // Pausar el video
 });
 
-// Manejar pausa de video
-socket.on('pause', (data) => {
-    player.seekTo(data.currentTime, true); // Sincronizar el tiempo
-    player.pauseVideo(); // Pausar el video
+// Manejar búsqueda de tiempo desde el socket
+socket.on('seek', (time) => {
+    player.seekTo(time, true); // Buscar al tiempo especificado
 });
 
 // Función de búsqueda de música

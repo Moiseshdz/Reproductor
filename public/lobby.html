@@ -49,11 +49,22 @@
             </div>
         </div>
         <div id="videoPlayerContainer">
-            <p class="subtitle">Reproductor</p>
-            <button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
-            <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button>
-            <div id="selectedVideoTitle"></div>
-            <iframe id="videoPlayer" src="" allowfullscreen controls="false"></iframe>
+            <!--p class="subtitle">Reproductor</p>
+
+            <!--button class="button is-link is-rounded" id="playButton" onclick="playMusic()">Lanzar</button>
+            <button class="button is-danger is-rounded" onclick="pauseMusic()">Pausar</button>
+            <!--p id="timer">00:00</p-->
+
+            <!--button class="button is-link is-rounded" onclick="playMusic()">Lanzar</button>
+            <button class="button is-danger is-rounded" onclick="pauseMusic()">Stop</button-->
+
+                <div id="videoPlayerContainer">
+                    <p class="subtitle">Reproductor</p>
+                    <div id="selectedVideoTitle"></div>
+                    <div id="videoPlayer"></div>
+                    <p id="time">0:00</p>
+                </div>
+
         </div>
     </div>
 
@@ -77,6 +88,7 @@
 
     <br>
     <script src="src/JavaScript/script_index.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         .notification {
             position: fixed;

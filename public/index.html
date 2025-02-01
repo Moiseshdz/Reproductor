@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="src/css/style_lobby.css">
+
     <title>Lobby</title>
 </head>
 
@@ -81,3 +82,74 @@
 </body>
 
 </html>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Player API Example</title>
+</head>
+<body>
+    <div id="videoPlayer"></div>
+    <p id="time">Tiempo transcurrido: 0:00</p>
+
+    <script>
+        // Cargar la API de YouTube IFrame
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        var interval;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('videoPlayer', { // Usar el ID 'videoPlayer'
+                height: '360',
+                width: '640',
+                videoId: 'M7lc1UVf-VE',
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log("El reproductor está listo");
+
+            // Iniciar el contador cuando el video comienza a reproducirse
+            player.addEventListener('onStateChange', function(event) {
+                if (event.data == YT.PlayerState.PLAYING) {
+                    startTimer();
+                } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
+                    clearInterval(interval); // Detener el contador si el video se pausa o termina
+                }
+            });
+        }
+
+        function startTimer() {
+            var timeElement = document.getElementById('time');
+
+            // Actualizar el contador cada segundo
+            interval = setInterval(function() {
+                var currentTime = player.getCurrentTime(); // Obtener el tiempo actual del video
+                timeElement.textContent = "Tiempo transcurrido: " + formatTime(currentTime);
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            var minutes = Math.floor(seconds / 60);
+            var secs = Math.floor(seconds % 60);
+            return minutes + ":" + (secs < 10 ? "0" : "") + secs; // Formato MM:SS
+        }
+
+        function onPlayerStateChange(event) {
+            // Actualizar el tiempo cuando el video se pausa, adelanta o retrocede
+            if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.PLAYING) {
+                var currentTime = player.getCurrentTime();
+                document.getElementById('time').textContent = "Tiempo transcurrido: " + formatTime(currentTime);
+            }
+        }
+    </script>
+</body>
+</html>
+<script src="https://www.youtube.com/iframe_api"></script>

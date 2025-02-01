@@ -1,4 +1,4 @@
-require('dotenv').config(); // Cargar variables de entorno
+require('dotenv').config();
 
 const express = require('express');
 const http = require('http');
@@ -12,26 +12,22 @@ const io = socketIo(server);
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3/search';
 
-app.use(express.static('public')); // Servir archivos estáticos
+app.use(express.static('public'));
+
+let lastState = {}; // Guardar el estado de cada sala
+let lastActionTime = {}; // Guardar la última acción de cada sala
 
 io.on('connection', (socket) => {
     console.log('Un usuario se ha conectado');
 
- // Unirse a una sala específica
- socket.on('joinRoom', (roomName) => {
-    socket.join(roomName);
-    console.log(`Usuario se unió a la sala: ${roomName}`);
+    socket.on('joinRoom', (roomName) => {
+        socket.join(roomName);
+        console.log(`Usuario se unió a la sala: ${roomName}`);
+        
+        const nickname = socket.handshake.headers.cookie?.split('nickname=')[1]?.split(';')[0] || 'Anónimo';
+        io.to(roomName).emit('userJoined', nickname);
+    });
 
-    // Obtener el nickname del usuario desde la cookie (esto debe ser manejado en el cliente)
-    const nickname = socket.handshake.headers.cookie?.split('nickname=')[1]?.split(';')[0] || 'Anónimo';
-
-    // Emitir evento de nuevo usuario
-    io.to(roomName).emit('userJoined', nickname);
-});
-
-// ------------------------------
-
-    // Manejar búsqueda de videos
     socket.on('search', async (query) => {
         try {
             const response = await axios.get(YOUTUBE_API_URL, {
@@ -56,24 +52,56 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Manejar eventos de reproducción, pausa, búsqueda y chat dentro de la sala
-    socket.on('play', (data) => {
+    socket.on('changeVideo', (data) => {
         const { roomName, videoUrl } = data;
-        io.to(roomName).emit('play', videoUrl);
+        io.to(roomName).emit('changeVideo', videoUrl);
     });
 
-    socket.on('pause', (roomName) => {
-        io.to(roomName).emit('pause');
+    socket.on('play', (data) => {
+        const { roomName, currentTime } = data;
+        if (!roomName) return;
+
+        const now = Date.now();
+        if (lastActionTime[roomName] && now - lastActionTime[roomName] < 1000) {
+            return; // No enviar eventos si han pasado menos de 1 segundo
+        }
+
+        if (lastState[roomName]?.state === 'play' && Math.abs(lastState[roomName]?.currentTime - currentTime) < 1) {
+            return; // Evita enviar si ya está en play y el tiempo es similar
+        }
+
+        console.log(`Play en sala ${roomName}, tiempo: ${currentTime}`);
+        lastState[roomName] = { state: 'play', currentTime };
+        lastActionTime[roomName] = now;
+        io.to(roomName).emit('play', { currentTime });
     });
 
-    socket.on('seek', (data) => {
-        const { roomName, time } = data;
-        io.to(roomName).emit('seek', time);
+    socket.on('pause', (data) => {
+        const { roomName, currentTime } = data;
+        if (!roomName) return;
+
+        const now = Date.now();
+        if (lastActionTime[roomName] && now - lastActionTime[roomName] < 1000) {
+            return;
+        }
+
+        if (lastState[roomName]?.state === 'pause') {
+            return; // Evita enviar si ya está en pausa
+        }
+
+        console.log(`Pause en sala ${roomName}, tiempo: ${currentTime}`);
+        lastState[roomName] = { state: 'pause', currentTime };
+        lastActionTime[roomName] = now;
+        io.to(roomName).emit('pause', { currentTime });
     });
 
     socket.on('chatMessage', (data) => {
         const { roomName, message } = data;
         io.to(roomName).emit('chatMessage', message);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Un usuario se ha desconectado');
     });
 });
 
