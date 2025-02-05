@@ -118,7 +118,7 @@ socket.on('searchResults', (data) => {
             selectedVideoUrl = video.url;
             selectedVideoTitle = video.title;
             const titleElement = document.getElementById('selectedVideoTitle');
-            titleElement.textContent = `Canción seleccionada: ${selectedVideoTitle}`;
+            titleElement.textContent = `${selectedVideoTitle}`;
 
             // Emitir el evento de cambio de video al servidor
             socket.emit('changeVideo', { roomName, videoUrl: selectedVideoUrl });
