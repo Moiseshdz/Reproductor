@@ -1,4 +1,4 @@
-WatchTogether: Sincronización de Videos en Tiempo Real
+SyncTube: Sincronización de Videos en Tiempo Real
 Descripción
 WatchTogether es una aplicación web desarrollada con Node.js que permite a múltiples usuarios ver videos de YouTube de forma sincronizada y en tiempo real. Es la solución perfecta para ver videos con amigos o familiares que se encuentran a distancia. La aplicación utiliza la API de YouTube para buscar videos directamente desde la interfaz, creando una experiencia fluida y centralizada.
 
