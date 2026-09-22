@@ -24,8 +24,8 @@ Aplicación web desarrollada con **Node.js, Express y Socket.IO** para reproduci
 ## Instalación
 
 ```bash
-git clone https://github.com/Moiseshdz/Reproductor.git
-cd Reproductor
+git clone https://github.com/Moiseshdz/synctube-realtime-video-sync.git
+cd synctube-realtime-video-sync
 npm install
 ```
 
